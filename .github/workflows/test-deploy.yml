@@ -1,0 +1,75 @@
+# SPDX-FileCopyrightText: Copyright (C) 2024 Martijn Saelens and Contributors to the project (https://github.com/MartenBE/mkslides/graphs/contributors)
+#
+# SPDX-License-Identifier: MIT
+---
+name: CI/CD
+"on":
+  push:
+    branches:
+      - main
+    tags:
+      - "[0-9]*"
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: write
+  discussions: write
+  id-token: write
+  pages: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22.20.0"
+      - run: npm install --global prettier
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13.8"
+      - run: pip install uv
+      - run: ./tests.sh .
+
+  release:
+    if: github.ref_type == 'tag'
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+
+  deploy:
+    if: github.ref_type == 'branch' && github.event_name == 'push' # Ensure deploy only runs on push to a branch, not pull_request or tag
+    needs: test
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+      - uses: actions/configure-pages@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+      - run: pip install uv
+      - run: uv sync
+      - run: uv run mkslides build
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./site
+      - id: deployment
+        uses: actions/deploy-pages@v4
