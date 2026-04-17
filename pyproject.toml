@@ -1,0 +1,17 @@
+[project]
+name = "presentation-conda-pypi-internals"
+version = "1"
+description = "A mkslides presentation"
+requires-python = ">=3.13"
+license = "MIT"
+dependencies = [
+  "mkslides"
+]
+
+authors = [
+  { name = "Daniel Holth" },
+]
+
+[project.urls]
+Homepage = "https://github.com/dholth/presentation-conda-pypi-internals"
+
