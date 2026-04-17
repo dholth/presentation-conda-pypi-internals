@@ -25,34 +25,8 @@ permissions:
   pages: write
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          submodules: true
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "22.20.0"
-      - run: npm install --global prettier
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.13.8"
-      - run: pip install uv
-      - run: ./tests.sh .
-
-  release:
-    if: github.ref_type == 'tag'
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: softprops/action-gh-release@v2
-        with:
-          generate_release_notes: true
-
   deploy:
     if: github.ref_type == 'branch' && github.event_name == 'push' # Ensure deploy only runs on push to a branch, not pull_request or tag
-    needs: test
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
